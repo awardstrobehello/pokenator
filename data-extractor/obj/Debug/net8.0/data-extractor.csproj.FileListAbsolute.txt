@@ -1,0 +1,15 @@
+C:\Users\Paul\Desktop\Work\personal-projects\pokenator\data-extractor\bin\Debug\net8.0\data-extractor.exe
+C:\Users\Paul\Desktop\Work\personal-projects\pokenator\data-extractor\bin\Debug\net8.0\data-extractor.deps.json
+C:\Users\Paul\Desktop\Work\personal-projects\pokenator\data-extractor\bin\Debug\net8.0\data-extractor.runtimeconfig.json
+C:\Users\Paul\Desktop\Work\personal-projects\pokenator\data-extractor\bin\Debug\net8.0\data-extractor.dll
+C:\Users\Paul\Desktop\Work\personal-projects\pokenator\data-extractor\bin\Debug\net8.0\data-extractor.pdb
+C:\Users\Paul\Desktop\Work\personal-projects\pokenator\data-extractor\obj\Debug\net8.0\data-extractor.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Paul\Desktop\Work\personal-projects\pokenator\data-extractor\obj\Debug\net8.0\data-extractor.AssemblyInfoInputs.cache
+C:\Users\Paul\Desktop\Work\personal-projects\pokenator\data-extractor\obj\Debug\net8.0\data-extractor.AssemblyInfo.cs
+C:\Users\Paul\Desktop\Work\personal-projects\pokenator\data-extractor\obj\Debug\net8.0\data-extractor.csproj.CoreCompileInputs.cache
+C:\Users\Paul\Desktop\Work\personal-projects\pokenator\data-extractor\obj\Debug\net8.0\data-extractor.sourcelink.json
+C:\Users\Paul\Desktop\Work\personal-projects\pokenator\data-extractor\obj\Debug\net8.0\data-extractor.dll
+C:\Users\Paul\Desktop\Work\personal-projects\pokenator\data-extractor\obj\Debug\net8.0\refint\data-extractor.dll
+C:\Users\Paul\Desktop\Work\personal-projects\pokenator\data-extractor\obj\Debug\net8.0\data-extractor.pdb
+C:\Users\Paul\Desktop\Work\personal-projects\pokenator\data-extractor\obj\Debug\net8.0\data-extractor.genruntimeconfig.cache
+C:\Users\Paul\Desktop\Work\personal-projects\pokenator\data-extractor\obj\Debug\net8.0\ref\data-extractor.dll
