@@ -23,6 +23,7 @@ namespace Models
         }
     }
 
+
     public class Question
     {
         [JsonPropertyName("id")]
@@ -37,9 +38,6 @@ namespace Models
         [JsonPropertyName("targetAttribute")]
         public string TargetAttribute { get; set; } = string.Empty;
 
-        [JsonPropertyName("importance")]
-        public double Importance { get; set; }
-
         public override string ToString()
         {
             return $"Question: {Text} (Category: {Category})";
@@ -52,4 +50,25 @@ namespace Models
         Color,
         Other
     }
+
+
+    public class UserAnswer
+    {
+        public string QuestionId { get; set; } = string.Empty;
+        public string Category { get; set; } = string.Empty;
+        public string TargetAttribute { get; set; } = string.Empty;
+        public UserResponse Response { get; set; }
+        public double Certainty { get; set; } = 0.8; // Default moderate certainty
+    }
+
+    public enum UserResponse
+    {
+        Yes,
+        Somewhat,
+        NotReally,
+        No,
+        DontKnow
+    }
+
+
 }
