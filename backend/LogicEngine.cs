@@ -9,7 +9,7 @@ namespace PokenatorBackend
     {
         public double CalculateConfidence(Pokemon pokemon, Dictionary<string, UserAnswer> userAnswers)
         {
-            if (!userAnswers.Any()) return 1.0; // No answers yet, all equally likely
+            if (!userAnswers.Any()) return 1.0;
 
             double totalConfidence = 1.0;
 
@@ -18,12 +18,10 @@ namespace PokenatorBackend
                 double pokemonValue = GetPokemonAttributeValue(pokemon, answer.Category, answer.TargetAttribute);
                 double matchScore = CalculateMatchScore(pokemonValue, answer.Response);
 
-                // Weight by question importance and apply to total confidence
-                double weightedScore = Math.Pow(matchScore, answer.Importance);
-                totalConfidence *= weightedScore;
+                // Let the information gain algorithm choose important questions
+                totalConfidence *= matchScore;
             }
 
-            // Prevent confidence from getting too close to 0
             return Math.Max(totalConfidence, 0.001);
         }
         internal double CalculateMatchScore(double pokemonValue, UserResponse response)
@@ -33,65 +31,99 @@ namespace PokenatorBackend
                 UserResponse.Yes => pokemonValue,
                 UserResponse.No => 1.0 - pokemonValue,
 
-                UserResponse.Probably => 0.7 * pokemonValue,           
-                UserResponse.ProbablyNot => 0.7 * (1.0 - pokemonValue),
+                UserResponse.Somewhat => 0.7 * pokemonValue,
+                UserResponse.NotReally => 0.7 * (1.0 - pokemonValue),
 
                 UserResponse.DontKnow => 0.5,
 
                 _ => 0.5
             };
         }
+        
         public Question? SelectNextQuestion(List<Pokemon> remainingPokemon, List<Question> availableQuestions,
             Dictionary<string, UserAnswer> userAnswers)
         {
-            if (!availableQuestions.Any()) return null;
+            if (!availableQuestions.Any()) return null; // Should never happen
 
             var questionGains = availableQuestions
                 .Where(q => !userAnswers.ContainsKey(q.Id))
-                .Select(q => new { Question = q, Gain = CalculateInformationGain(q, remainingPokemon) })
+                .Select(q => new
+                {
+                    Question = q,
+                    Gain = CalculateInformationGain(q, remainingPokemon, userAnswers),
+                })
                 .Where(x => x.Gain > 0.01)
-                .OrderByDescending(x => x.Gain * x.Question.Importance)
+                .OrderByDescending(x => x.Gain)
                 .ToList();
 
             return questionGains.FirstOrDefault()?.Question;
         }
-        
-        private double CalculateInformationGain(Question question, List<Pokemon> pokemon)
+
+        private double GetCategoryBonus(string category, int questionsAsked)
         {
-            if (!pokemon.Any()) return 0;
+            // Early game: Prefer high-discrimination categories
+            // Late game: All categories equal
+            if (questionsAsked < 3)
+            {
+                return category.ToLower() switch
+                {
+                    "type" => 1.2,      // Types discriminate well early
+                    "other" => 1.1,     // Stronger
+                    "color" => 1.0,     // Okay. Pokemon tend to have multiple colors
+                    _ => 1.0
+                };
+            }
+            return 1.0; // Late game: trust pure information gain
+        }
 
-            // Get distribution of attribute values for this question
-            var values = pokemon
-                .Select(p => GetPokemonAttributeValue(p, question.Category, question.TargetAttribute))
-                .ToList();
+        // Where are the calculations for the pokemon attribute values per questions being asked?
+        private double CalculateInformationGain(Question question, List<Pokemon> pokemon, Dictionary<string, UserAnswer> userAnswers)
+        {
+            if (!pokemon.Any()) return 0; // Realistically should never be called
 
-            // Calculate current entropy (how mixed up the values are)
-            double currentEntropy = CalculateEntropy(values);
+            // Get distribution of attribute values for question + confidence of pokemon
+            var pokemonData = pokemon
+                .Select(p => new
+                {
+                    Pokemon = p,
+                    AttributeValue = GetPokemonAttributeValue(p, question.Category, question.TargetAttribute),
+                    CurrentConfidence = CalculateConfidence(p, userAnswers)
+                })
+                .ToList();            // Calculate current entropy
+
+            double currentEntropy = CalculateEntropy(
+                pokemonData.Select(pd => pd.AttributeValue).ToList(),
+                pokemonData.Select(pd => pd.CurrentConfidence).ToList()
+            );
 
             // Simulate what happens if user gives each possible answer
             double expectedEntropy = 0.0;
-            var responses = new[] { UserResponse.Yes, UserResponse.No, UserResponse.Probably, UserResponse.ProbablyNot };
+            var responses = new[] { UserResponse.Yes, UserResponse.No, UserResponse.Somewhat, UserResponse.NotReally };
 
             foreach (var response in responses)
             {
-                // Find Pokemon that would get good match scores for this response
-                var matchingPokemon = new List<double>();
+                var matchingData = pokemonData
+                    .Select(pd => new
+                        {
+                            pd.AttributeValue,
+                            pd.CurrentConfidence,
+                            MatchScore = CalculateMatchScore(pd.AttributeValue, response)
+                        })
+                    .Where(x => x.MatchScore > 0.6)
+                    .ToList();
 
-                foreach (var value in values)
+                if (matchingData.Any())
                 {
-                    double matchScore = CalculateMatchScore(value, response);
-                    if (matchScore > 0.6) // Threshold for "good match"
-                    {
-                        matchingPokemon.Add(value);
-                    }
-                }
+                    double totalConfidence = pokemonData.Sum(pd => pd.CurrentConfidence);
+                    double responseWeight = matchingData.Sum(md => md.CurrentConfidence) / totalConfidence;
 
-                if (matchingPokemon.Any())
-                {
-                    // Weight by how likely this response is
-                    double responseProbability = (double)matchingPokemon.Count / values.Count;
-                    double splitEntropy = CalculateEntropy(matchingPokemon);
-                    expectedEntropy += responseProbability * splitEntropy;
+
+                    double splitEntropy = CalculateEntropy(
+                        matchingData.Select(md => md.AttributeValue).ToList(),
+                        matchingData.Select(md => md.CurrentConfidence).ToList()
+                    );
+
+                    expectedEntropy += responseWeight * splitEntropy;
                 }
             }
 
@@ -99,28 +131,28 @@ namespace PokenatorBackend
         }
 
 
-        private double CalculateEntropy(List<double> values)
+        private double CalculateEntropy(List<double> values, List<double> weights)
         {
             if (!values.Any()) return 0;
 
             // Group values into bins (0.0-0.1, 0.1-0.2, etc.)
-            var bins = new int[10]; // 10 bins for 0.0 to 1.0
+            var bins = new double[10]; // 10 bins for 0.0 to 1.0
+            double totalWeight = 0;
 
-            foreach (var value in values)
+
+            for (int i = 0; i < values.Count; i++)
             {
-                int binIndex = Math.Min(9, (int)(value * 10)); // Clamp to 0-9
-                bins[binIndex]++;
+                int binIndex = Math.Min(9, (int)(values[i] * 10));
+                bins[binIndex] += weights[i];
+                totalWeight += weights[i];
             }
-
             // Calculate entropy using probability of each bin
             double entropy = 0.0;
-            int totalCount = values.Count;
-
             for (int i = 0; i < bins.Length; i++)
             {
                 if (bins[i] > 0)
                 {
-                    double probability = (double)bins[i] / totalCount;
+                    double probability = bins[i] / totalWeight;
                     entropy -= probability * Math.Log2(probability);
                 }
             }
@@ -154,23 +186,28 @@ namespace PokenatorBackend
             var topCandidate = confidences.First();
 
             // Dynamic threshold: start low, increase as we ask more questions
-            double dynamicThreshold = Math.Min(0.8,
-                0.55 + (userAnswers.Count * 0.04));
+            double dynamicThreshold = Math.Min(0.8, 0.55 + (userAnswers.Count * 0.04));
 
             // Make guess if:
             // 1. High confidence in top candidate OR
             // 2. Only a few Pokemon left OR  
             // 3. Top candidate significantly higher than others
 
-            // Need to fix if there's a lot of potential "correct" pokemon
+            double confidenceThreshold = topCandidate.Confidence * 0.9;
+            int closeContenders = confidences.Count(c => c.Confidence >= confidenceThreshold);
 
-            if (topCandidate.Confidence > dynamicThreshold ||
-                remainingPokemon.Count <= 3 ||
-                (confidences.Count > 1 && topCandidate.Confidence / confidences[1].Confidence > 2.0))
+
+            bool highConfidenceWithClearWinner = topCandidate.Confidence > dynamicThreshold && closeContenders <= 2;
+            bool fewRemaining = remainingPokemon.Count <= 2;
+            bool significantGap = confidences.Count > 1 &&
+                                 topCandidate.Confidence / confidences[1].Confidence > 1.5 &&
+                                 closeContenders <= 3;
+
+
+            if (highConfidenceWithClearWinner || fewRemaining || significantGap)
             {
                 return topCandidate.Pokemon;
             }
-
             return null;
         }
         public List<Pokemon> FilterByConfidence(List<Pokemon> pokemon, Dictionary<string, UserAnswer> userAnswers,
@@ -185,24 +222,5 @@ namespace PokenatorBackend
                 .Where(p => CalculateConfidence(p, userAnswers) > threshold)
                 .ToList();
         }
-    }
-
-    public class UserAnswer
-    {
-        public string QuestionId { get; set; } = string.Empty;
-        public string Category { get; set; } = string.Empty;
-        public string TargetAttribute { get; set; } = string.Empty;
-        public UserResponse Response { get; set; }
-        public double Certainty { get; set; } = 0.8; // Default moderate certainty
-        public double Importance { get; set; } = 1.0;
-    }
-
-    public enum UserResponse
-    {
-        Yes,
-        No,
-        Probably,
-        ProbablyNot,
-        DontKnow
     }
 }
