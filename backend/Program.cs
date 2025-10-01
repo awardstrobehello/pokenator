@@ -19,24 +19,25 @@ namespace PokenatorBackend
             // RandomTest is a random pokemon and the akinator guesses random questions
             if (args.Length == 0)
             {
-                RandomTest();
+                RealTest();
             }
             else
             {
-                RealTest();
+                RandomTest();
             }
         }
 
         static void RealTest()
         {
             Console.WriteLine("RealTest called");
-            var engine = new LogicEngine();
+            
             try
             {
-                var (pokemon, question) = LoadData();
-                Console.WriteLine($"{pokemon.Count} Pokemon; {question.Count} questions\n");
-                QuestionSelection(engine, pokemon, question);
-                TestConfidence(engine, pokemon, question);
+                var game = GameState.Initialize();
+
+                Console.WriteLine($"{game.AllPokemon.Count} Pokemon; {game.AllQuestions.Count} questions\n");
+                QuestionSelection(game);
+                TestConfidence(game.Engine, game.AllPokemon, game.AllQuestions);
             }
             catch (Exception e)
             {
@@ -69,11 +70,12 @@ namespace PokenatorBackend
         }
 
 
-        static void QuestionSelection(LogicEngine engine, List<Pokemon> pokemon, List<Question> questions)
+        static void QuestionSelection(GameState game)
         {
             Console.WriteLine($"QuestionSelection called.");
             var emptyAnswers = new Dictionary<String, UserAnswer>();
-            var bestQuestion = engine.SelectNextQuestion(pokemon, questions, emptyAnswers);
+            var bestQuestion = game.GetNextQuestion();
+
 
             if (bestQuestion != null)
             {
@@ -83,20 +85,11 @@ namespace PokenatorBackend
             else Console.WriteLine($"No question selected. Check for an issue...\n");
 
             Console.WriteLine("----- Top 7 candidates:");
-            var tempAnswers = new Dictionary<String, UserAnswer>();
 
             for (int i = 0; i < 7; i++)
             {
-                var tempQuestion = engine.SelectNextQuestion(pokemon, questions, tempAnswers);
+                var tempQuestion = game.GetNextQuestion();
                 if (tempQuestion == null) break;
-
-                tempAnswers[tempQuestion.Id] = new UserAnswer
-                {
-                    QuestionId = tempQuestion.Id,
-                    Category = tempQuestion.Category,
-                    TargetAttribute = tempQuestion.TargetAttribute,
-                    Response = UserResponse.DontKnow
-                };
                 Console.WriteLine($"{i + 1}: {tempQuestion.Text}");
             }
 
@@ -107,42 +100,29 @@ namespace PokenatorBackend
             Console.WriteLine("RandomTest called\n");
             try
             {
-                var engine = new LogicEngine();
-                var (pokemon, questions) = LoadData();
+                var game = GameState.Initialize();
 
                 var random = new Random();
 
-                int randomId = random.Next(pokemon.Count);
-                var targetPokemon = pokemon[randomId - 1];
-                Console.WriteLine($"Pokemon Id {randomId} ({targetPokemon.Name}) called.");
-
-                // Random Game Test
-                Console.WriteLine($"\n\n !!!!! Random test begun !!!!! \n\n");
-                var userAnswers = new Dictionary<string, UserAnswer>();
-                var remainingPokemon = new List<Pokemon>(pokemon);
-                var askedQuestions = new HashSet<string>();
+                int randomId = random.Next(game.AllPokemon.Count);
+                var targetPokemon = game.AllPokemon[randomId];
+                Console.WriteLine($"Target Pokemon: {targetPokemon.Name}\n");
 
                 for (int round = 1; round <= 8; round++)
                 {
                     Console.WriteLine($"Round {round}");
 
-                    var availableQuestions = questions.Where(q => !askedQuestions.Contains(q.Id)).ToList();
 
-                    // Should NEVER happen
-                    if (!availableQuestions.Any())
+                    var question = game.GetNextQuestion();
+                    if (question == null)
                     {
-                        Console.WriteLine("No more questions to ask");
+                        Console.WriteLine("No more questions available");
                         break;
                     }
 
-                    var randomQuestion = availableQuestions[random.Next(availableQuestions.Count)];
-                    askedQuestions.Add(randomQuestion.Id);
-                    Console.WriteLine($"{randomQuestion}");
-                    // Simulate target Pokemon's answer
+                    Console.WriteLine($"{question.Text}");
 
-
-
-                    var attributeDict = randomQuestion.Category.ToLower() switch
+                    var attributeDict = question.Category.ToLower() switch
                     {
                         "type" => targetPokemon.Type,
                         "color" => targetPokemon.Color,
@@ -150,7 +130,7 @@ namespace PokenatorBackend
                         _ => new Dictionary<string, double>()
                     };
 
-                    var targetValue = attributeDict.TryGetValue(randomQuestion.TargetAttribute, out double value) ? value : 0.0;
+                    var targetValue = attributeDict.TryGetValue(question.TargetAttribute, out double value) ? value : 0.0;
 
                     var simulatedResponse = targetValue switch
                     {
@@ -159,75 +139,43 @@ namespace PokenatorBackend
                         >= 0.4 => UserResponse.DontKnow,
                         >= 0.2 => UserResponse.NotReally,
                         _ => UserResponse.No
-
                     };
 
-                    Console.WriteLine($"Target Pokemon value: {targetValue}; Response {simulatedResponse}\n");
+                    Console.WriteLine($"Target value: {targetValue} → Response: {simulatedResponse}");
 
+                    game.RecordAnswer(question.Id, simulatedResponse);
 
-
-                    userAnswers[randomQuestion.Id] = new UserAnswer
+                    var topCandidates = game.GetTopCandidates();
+                    Console.WriteLine("Top candidates:");
+                    foreach (var (pokemon, probability) in topCandidates)
                     {
-                        QuestionId = randomQuestion.Id,
-                        Category = randomQuestion.Category,
-                        TargetAttribute = randomQuestion.TargetAttribute,
-                        Response = simulatedResponse,
-                    };
-
-                    var confidences = pokemon
-                        .Select(p => new
-                        {
-                            Pokemon = p,
-                            Confidence = engine.CalculateConfidence(p, userAnswers)
-                        })
-                        .OrderByDescending(x => x.Confidence)
-                        .Take(7)  // Top 7
-                        .ToList();
-
-                    Console.WriteLine("Top 7 candidates:");
-                    foreach (var candidate in confidences)
-                    {
-                        string marker = candidate.Pokemon.Name == targetPokemon.Name ? " <<<<< TARGET" : "";
-                        Console.WriteLine($"  {candidate.Pokemon.Name}: {candidate.Confidence:F3}{marker}");
+                        string marker = pokemon.Name == targetPokemon.Name ? " ← Target" : "";
+                        Console.WriteLine($"  {pokemon.Name}: {probability:P1}{marker}");
                     }
 
-                    var guess = engine.ShouldMakeGuess(remainingPokemon, userAnswers);
+                    var guess = game.ShouldMakeGuess();
                     if (guess != null)
                     {
-                        Console.WriteLine($"\nAI wants to guess: {guess.Name}");
+                        Console.WriteLine($"\nAI guesses: {guess.Name}");
                         bool correct = guess.Name == targetPokemon.Name;
-                        Console.WriteLine(correct ? "Correct guess" : "Wrong guess");
+                        Console.WriteLine(correct ? "Correct" : "Wrong");
 
                         if (correct)
                         {
-                            Console.WriteLine($"Success in {round} questions");
-                            return;
+                            Console.WriteLine($"Success in {game.QuestionsAsked} questions");
+                            return;  // Exit test
                         }
                         else
                         {
-                            Console.WriteLine("Continuing with more questions...");
-                            remainingPokemon.RemoveAll(p => p.Name == guess.Name);
+                            Console.WriteLine($"Wrong guess recorded");
+                            game.RecordWrongGuess(guess);
                         }
                     }
-                    Console.WriteLine();
+
+
+                    // Console.WriteLine($"Questions asked: {game.QuestionsAsked}");
                 }
-                Console.WriteLine("Simulation ended without a successful guess");
-                var finalTop = pokemon
-                    .Select(p => new
-                    {
-                        Pokemon = p,
-                        Confidence = engine.CalculateConfidence(p, userAnswers)
-                    })
-                    .OrderByDescending(x => x.Confidence)
-                    .First();
-
-                Console.WriteLine($"Best final guess would be: {finalTop.Pokemon.Name} ({finalTop.Confidence:F3})");
-
-
-
-
-
-
+                Console.WriteLine("Test finished");
             }
             catch (Exception e)
             {

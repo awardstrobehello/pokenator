@@ -45,36 +45,109 @@ namespace PokenatorBackend
         {
             if (!availableQuestions.Any()) return null; // Should never happen
 
+            var focusedPokemon = GetFocusedPokemon(remainingPokemon, userAnswers);
+
             var questionGains = availableQuestions
                 .Where(q => !userAnswers.ContainsKey(q.Id))
                 .Select(q => new
                 {
                     Question = q,
                     Gain = CalculateInformationGain(q, remainingPokemon, userAnswers),
+                    Bonus = CategoryBonus(q.Category, userAnswers.Count)
                 })
-                .Where(x => x.Gain > 0.01)
-                .OrderByDescending(x => x.Gain)
+                .Select(x => new
+                {
+                    x.Question,
+                    AdjustedGain = x.Gain * x.Bonus
+                })
+                .Where(x => x.AdjustedGain > 0.01)
+                .OrderByDescending(x => x.AdjustedGain)
                 .ToList();
 
             return questionGains.FirstOrDefault()?.Question;
         }
 
-        private double GetCategoryBonus(string category, int questionsAsked)
+        private List<Pokemon> GetFocusedPokemon(List<Pokemon> pokemon, Dictionary<string, UserAnswer> userAnswers)
         {
-            // Early game: Prefer high-discrimination categories
-            // Late game: All categories equal
+            if (!userAnswers.Any()) return pokemon;
+
+            var rankedPokemon = pokemon
+                .Select(p => new { Pokemon = p, Confidence = CalculateConfidence(p, userAnswers) })
+                .OrderByDescending(x => x.Confidence)
+                .ToList();
+
+            double totalConfidence = rankedPokemon.Sum(x => x.Confidence);
+
+            var probabilities = rankedPokemon
+                .Select(x => new
+                {
+                    x.Pokemon,
+                    Probability = x.Confidence / totalConfidence
+                })
+                .ToList();
+
+            var focusedList = new List<Pokemon>();
+            double cumulativeProbability = 0.0;
+
+            foreach (var p in probabilities)
+            {
+                focusedList.Add(p.Pokemon);
+                cumulativeProbability += p.Probability;
+
+                if (cumulativeProbability >= 0.90 && focusedList.Count >= 5)
+                    break;
+            }
+
+            if (focusedList.Count < 5) focusedList = probabilities.Take(5).Select(x => x.Pokemon).ToList();
+            if (focusedList.Count > 10) focusedList = focusedList.Take(10).ToList();
+
+            return focusedList;
+        }
+
+        private double CategoryBonus(string category, int questionsAsked)
+        {
+            // In the early game, strongly prefer factual questions
             if (questionsAsked < 3)
             {
                 return category.ToLower() switch
                 {
-                    "type" => 1.2,      // Types discriminate well early
-                    "other" => 1.1,     // Stronger
-                    "color" => 1.0,     // Okay. Pokemon tend to have multiple colors
+                    "type" => 1.5,      // Types are facts
+                    "color" => 1.2,     // Color is pretty objective
+                    "other" => 0.7,     // Subjective questions are harder
                     _ => 1.0
                 };
             }
-            return 1.0; // Late game: trust pure information gain
+
+            if (questionsAsked < 5)
+            {
+                return category.ToLower() switch
+                {
+                    "type" => 1.2,
+                    _ => 1.0
+                };
+            }
+            return 1.0;
         }
+
+
+        public List<(Pokemon Pokemon, double Probability)> GetPokemonProbabilities(List<Pokemon> pokemon, Dictionary<string, UserAnswer> userAnswers)
+        {
+            var confidences = pokemon
+                .Select(p => new { Pokemon = p, Confidence = CalculateConfidence(p, userAnswers) })
+                .ToList();
+
+            double totalConfidence = confidences.Sum(x => x.Confidence);
+
+            if (totalConfidence == 0) totalConfidence = 1.0;
+
+            return confidences
+                .Select(x => (x.Pokemon, Probability: x.Confidence / totalConfidence))
+                .OrderByDescending(x => x.Probability)
+                .ToList();
+        }
+
+
+
 
         // Where are the calculations for the pokemon attribute values per questions being asked?
         private double CalculateInformationGain(Question question, List<Pokemon> pokemon, Dictionary<string, UserAnswer> userAnswers)
@@ -104,11 +177,11 @@ namespace PokenatorBackend
             {
                 var matchingData = pokemonData
                     .Select(pd => new
-                        {
-                            pd.AttributeValue,
-                            pd.CurrentConfidence,
-                            MatchScore = CalculateMatchScore(pd.AttributeValue, response)
-                        })
+                    {
+                        pd.AttributeValue,
+                        pd.CurrentConfidence,
+                        MatchScore = CalculateMatchScore(pd.AttributeValue, response)
+                    })
                     .Where(x => x.MatchScore > 0.6)
                     .ToList();
 
