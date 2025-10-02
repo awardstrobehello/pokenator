@@ -115,8 +115,8 @@ namespace PokenatorBackend
 
         static (List<Pokemon>, List<Question>) LoadData()
         {
-            string pokemonPath = "Data/pokemon.json";
-            string questionPath = "Data/questions.json";
+            string pokemonPath = "data/pokemon.json";
+            string questionPath = "data/questions.json";
 
             if (!File.Exists(questionPath) || (!File.Exists(pokemonPath)))
             {
