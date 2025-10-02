@@ -1,23 +1,21 @@
 # Pokénator
-Inspired by Akinator, Pokénator is a pokemon guessing game. It tries to guess what Pokemon the user is thinking of in a limited number of guesses. Uses fuzzy logic to handle uncertainty and subjective questions (cute, cool, intimidating, etc).
+Inspired by Akinator, Pokénator is a pokemon guessing game. It tries to guess what Pokemon the user is thinking of in a limited number of guesses. Uses pure fuzzy logic for types, colors, and subjective characteristics: cute, cool, intimidating, etc.
 
 ## Core Components
-- Fuzzy logic implementation, like Akinator
+- Pure fuzzy logic implementation, like Akinator
 
-## TO-DO
-- Get fuzzy scores of pokemon as JSON file (done)
-- Link endpoints to Azure (CosmoDB, Storage)
 
-## Structure (Planned)  
+## Structure
 backend /  
 ————/ Program.cs  — Game control    
 ————/ Models.cs  
 ————/ GameState.cs  — What's been asked, what's possible, user answers  
-————/ LogicEngine.cs 
+————/ LogicEngine.cs
   
-————/ Data /  
+————/ Data /  — see sample .json documents
 ———————/ pokemon.json  
 ———————/ questions.json  
+
 ————/ PokenatorBackend.csproj  
 
 frontend/  
@@ -28,26 +26,21 @@ data-extractor/
 
 ## Development Plan
 - Initial local development
+- Create json files
+    - `pokemon_gen1.json` from existing extractor ✓
+    - `questions.json` ✓
+- Implement pure fuzzy logic implementation ✓
+- Create test game in console to guess pokemon ✓
 
-- Console testing app
+- Implement self-learning functions through feedback/correct or wrong answers
+    - "What pokemon were you thinking of?"
+- Make function to update json file w/ pokemon and attribute values...?
 
-- Start with purely fuzzy logic implementation
-    - Every Pokemon gets scored on every attribute, avoiding issues with a binary system
-    - Deals with potential misconceptions that users may have when answering questions
-        - Mega forms changing type?
-        - Different "main" color answers?
-            - Snorlax having primary color be "black" in API when nobody would answer that
-    - Take extracted factual data and transfer it to fuzzy scores as 1.0   
 
-- `pokemon_gen1.json` from existing extractor
-    - Backup maintained
-- `questions.json` Contains questions
+## TO-DO
+- Start the frontend with React
+- Double-check whether or not TypeScript is necessary 
 
-- Eventually transfer JSON files -> CosmosDB
-
-- Backend infrastructure using asp.net
-    - Prevent repetitive question patterns
-    - Find a way to handle similar pokemon (Pikachu, Jolteon) ?
-    - Rough diagram of the guesser's strategy: use immutable characteristics to eliminate pokemon; guess the next question based on confidence?
-
-- React frontend with TypeScript
+- Build on backend infrastructure using asp.net to communicate with Azure
+    - Transfer JSON files -> CosmosDB
+- Decision tree at some point...?
