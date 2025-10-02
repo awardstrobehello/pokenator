@@ -19,7 +19,7 @@ namespace PokenatorBackend
             // RandomTest is a random pokemon and the akinator guesses random questions
             if (args.Length == 0)
             {
-                RealTest();
+                RealGame();
             }
             else
             {
@@ -27,17 +27,85 @@ namespace PokenatorBackend
             }
         }
 
-        static void RealTest()
+        static void RealGame()
         {
-            Console.WriteLine("RealTest called");
-            
+            Console.WriteLine("RealGame called");
             try
             {
                 var game = GameState.Initialize();
+                Console.WriteLine($"Think of a Pokemon!\n");
 
-                Console.WriteLine($"{game.AllPokemon.Count} Pokemon; {game.AllQuestions.Count} questions\n");
-                QuestionSelection(game);
-                TestConfidence(game.Engine, game.AllPokemon, game.AllQuestions);
+                for (int round = 1; round <= 10; round++)
+                {
+
+                    var question = game.GetNextQuestion();
+                    if (question == null)
+                    {
+                        Console.WriteLine("No more questions left...");
+                        break;
+                    }
+
+                    Console.WriteLine($"\nRound {round}: {question.Text}");
+                    Console.WriteLine("1 Yes      2 Somewhat      3 NotReally      4 No      5 DontKnow");
+                    string input = Console.ReadLine()?.Trim().ToLower() ?? "";
+
+
+                    int validInput = -1;
+                    while (validInput == -1) {
+                        validInput = 1;
+                        switch (input)
+                        {
+                            case "yes" or "y" or "1":
+                                game.RecordAnswer(question.Id, UserResponse.Yes);
+                                break;
+                            case "somewhat" or "s" or "2":
+                                game.RecordAnswer(question.Id, UserResponse.Somewhat);
+                                break;
+                            case "notreally" or "nr" or "3":
+                                game.RecordAnswer(question.Id, UserResponse.NotReally);
+                                break;
+                            case "no" or "n" or "4":
+                                game.RecordAnswer(question.Id, UserResponse.No);
+                                break;
+                            case "dontknow" or "idk" or "5":
+                                game.RecordAnswer(question.Id, UserResponse.DontKnow);
+                                break;
+                            default:
+                                Console.WriteLine("Incorrect input");
+                                validInput = -1;
+                                input = Console.ReadLine()?.Trim().ToLower() ?? "";
+                                break;
+                        }
+                    }
+
+                    Console.WriteLine($"Response: {input}");
+
+                    var topCandidates = game.GetTopCandidates();
+                    Console.WriteLine("Top candidates:");
+                    foreach (var (pokemon, probability) in topCandidates)
+                    {
+                        Console.WriteLine($"  {pokemon.Name}: {probability:P1}");
+                    }
+
+                    var guess = game.ShouldMakeGuess();
+                    if (guess != null)
+                    {
+                        Console.WriteLine($"\nIs it {guess.Name}? (y/n)");
+                        var correct = Console.ReadLine()?.Trim().ToLower() == "y";
+                        if (correct)
+                        {
+                            Console.WriteLine($"\nI guessed it in {game.QuestionsAsked} questions!");
+                            return;
+                        }
+                        else
+                        {
+                            Console.WriteLine("Continuing...");
+                            game.RecordWrongGuess(guess);
+                        }
+                    }
+
+                }
+                Console.WriteLine("Game complete.\n");
             }
             catch (Exception e)
             {
@@ -108,9 +176,9 @@ namespace PokenatorBackend
                 var targetPokemon = game.AllPokemon[randomId];
                 Console.WriteLine($"Target Pokemon: {targetPokemon.Name}\n");
 
-                for (int round = 1; round <= 8; round++)
+                for (int round = 1; round <= 10; round++)
                 {
-                    Console.WriteLine($"Round {round}");
+                    Console.WriteLine($"\nRound {round}");
 
 
                     var question = game.GetNextQuestion();
@@ -158,16 +226,15 @@ namespace PokenatorBackend
                     {
                         Console.WriteLine($"\nAI guesses: {guess.Name}");
                         bool correct = guess.Name == targetPokemon.Name;
-                        Console.WriteLine(correct ? "Correct" : "Wrong");
 
                         if (correct)
                         {
-                            Console.WriteLine($"Success in {game.QuestionsAsked} questions");
+                            Console.WriteLine($"Correct! Success in {game.QuestionsAsked} questions.\n");
                             return;  // Exit test
                         }
                         else
                         {
-                            Console.WriteLine($"Wrong guess recorded");
+                            Console.WriteLine($"Incorrect. Wrong guess recorded\n");
                             game.RecordWrongGuess(guess);
                         }
                     }
@@ -175,7 +242,7 @@ namespace PokenatorBackend
 
                     // Console.WriteLine($"Questions asked: {game.QuestionsAsked}");
                 }
-                Console.WriteLine("Test finished");
+                Console.WriteLine("Game complete.\n");
             }
             catch (Exception e)
             {
@@ -183,15 +250,6 @@ namespace PokenatorBackend
             }
 
         }
-
-        //          \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-        //          \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-        //          \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-        //          \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-        //          \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-        //          \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-        //          \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-        //          \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
 
         static void TestConfidence(LogicEngine engine, List<Pokemon> pokemon, List<Question> questions)

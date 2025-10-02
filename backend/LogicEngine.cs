@@ -47,6 +47,9 @@ namespace PokenatorBackend
 
             var focusedPokemon = GetFocusedPokemon(remainingPokemon, userAnswers);
 
+            // Console.WriteLine($"\n--- Question Selection Debug ---");
+            // Console.WriteLine($"Focused on {focusedPokemon.Count} Pokemon (from {remainingPokemon.Count} total)");
+
             var questionGains = availableQuestions
                 .Where(q => !userAnswers.ContainsKey(q.Id))
                 .Select(q => new
@@ -58,11 +61,20 @@ namespace PokenatorBackend
                 .Select(x => new
                 {
                     x.Question,
+                    x.Gain,
+                    x.Bonus,
                     AdjustedGain = x.Gain * x.Bonus
                 })
                 .Where(x => x.AdjustedGain > 0.01)
                 .OrderByDescending(x => x.AdjustedGain)
                 .ToList();
+
+            // Console.WriteLine($"\nTop 10 question candidates:");
+            // foreach (var item in questionGains.Take(5))
+            // {
+            //     Console.WriteLine($"  [{item.Question.Category}] {item.Question.Text}");
+            //     Console.WriteLine($"    Raw Gain: {item.Gain:F4} × Bonus: {item.Bonus:F2} = Adjusted: {item.AdjustedGain:F4}");
+            // }
 
             return questionGains.FirstOrDefault()?.Question;
         }
@@ -149,7 +161,6 @@ namespace PokenatorBackend
 
 
 
-        // Where are the calculations for the pokemon attribute values per questions being asked?
         private double CalculateInformationGain(Question question, List<Pokemon> pokemon, Dictionary<string, UserAnswer> userAnswers)
         {
             if (!pokemon.Any()) return 0; // Realistically should never be called
@@ -251,36 +262,23 @@ namespace PokenatorBackend
             if (!remainingPokemon.Any()) return null;
 
             // Calculate confidence for all remaining Pokemon
-            var confidences = remainingPokemon
-                .Select(p => new { Pokemon = p, Confidence = CalculateConfidence(p, userAnswers) })
-                .OrderByDescending(x => x.Confidence)
-                .ToList();
+            var probabilities = GetPokemonProbabilities(remainingPokemon, userAnswers);
 
-            var topCandidate = confidences.First();
+            var topCandidate = probabilities.First();
 
-            // Dynamic threshold: start low, increase as we ask more questions
-            double dynamicThreshold = Math.Min(0.8, 0.55 + (userAnswers.Count * 0.04));
+            bool highConfidence = topCandidate.Probability >= 0.15;
 
-            // Make guess if:
-            // 1. High confidence in top candidate OR
-            // 2. Only a few Pokemon left OR  
-            // 3. Top candidate significantly higher than others
+            bool clearLeader = probabilities.Count == 1 ||  // Only one Pokemon left
+                              (probabilities.Count > 1 &&
+                               topCandidate.Probability / probabilities[1].Probability >= 2);
 
-            double confidenceThreshold = topCandidate.Confidence * 0.9;
-            int closeContenders = confidences.Count(c => c.Confidence >= confidenceThreshold);
+            bool tooManyQuestions = userAnswers.Count >= 10;
 
-
-            bool highConfidenceWithClearWinner = topCandidate.Confidence > dynamicThreshold && closeContenders <= 2;
-            bool fewRemaining = remainingPokemon.Count <= 2;
-            bool significantGap = confidences.Count > 1 &&
-                                 topCandidate.Confidence / confidences[1].Confidence > 1.5 &&
-                                 closeContenders <= 3;
-
-
-            if (highConfidenceWithClearWinner || fewRemaining || significantGap)
+            if ((highConfidence && clearLeader) || tooManyQuestions)
             {
                 return topCandidate.Pokemon;
             }
+
             return null;
         }
         public List<Pokemon> FilterByConfidence(List<Pokemon> pokemon, Dictionary<string, UserAnswer> userAnswers,
