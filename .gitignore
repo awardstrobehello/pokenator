@@ -19,6 +19,3 @@ packages/
 .vs/
 *.user
 *.suo
-
-# Data files 
-backend/Data/

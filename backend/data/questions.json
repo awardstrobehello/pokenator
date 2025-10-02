@@ -1,0 +1,290 @@
+[
+    {
+        "id": "is-poison-type",
+        "text": "Is it a Poison type?",
+        "category": "type",
+        "targetAttribute": "poison"
+    },
+    {
+        "id": "is-water-type",
+        "text": "Is it a Water type?",
+        "category": "type",
+        "targetAttribute": "water"
+    },
+    {
+        "id": "is-normal-type",
+        "text": "Is it a Normal type?",
+        "category": "type",
+        "targetAttribute": "normal"
+    },
+    {
+        "id": "is-flying-type",
+        "text": "Is it a Flying type?",
+        "category": "type",
+        "targetAttribute": "flying"
+    },
+    {
+        "id": "is-legendary",
+        "text": "Is it legendary?",
+        "category": "other",
+        "targetAttribute": "legendary"
+    },
+    {
+        "id": "is-starter",
+        "text": "Is it a starter Pokemon?",
+        "category": "other",
+        "targetAttribute": "starter"
+    },
+    {
+        "id": "is-grass-type",
+        "text": "Is it a Grass type?",
+        "category": "type",
+        "targetAttribute": "grass"
+    },
+    {
+        "id": "is-ground-type",
+        "text": "Is it a Ground type?",
+        "category": "type",
+        "targetAttribute": "ground"
+    },
+    {
+        "id": "is-psychic-type",
+        "text": "Is it a Psychic type?",
+        "category": "type",
+        "targetAttribute": "psychic"
+    },
+    {
+        "id": "is-fire-type",
+        "text": "Is it a Fire type?",
+        "category": "type",
+        "targetAttribute": "fire"
+    },
+    {
+        "id": "is-bug-type",
+        "text": "Is it a Bug type?",
+        "category": "type",
+        "targetAttribute": "bug"
+    },
+    {
+        "id": "is-rock-type",
+        "text": "Is it a Rock type?",
+        "category": "type",
+        "targetAttribute": "rock"
+    },
+    {
+        "id": "is-electric-type",
+        "text": "Is it an Electric type?",
+        "category": "type",
+        "targetAttribute": "electric"
+    },
+    {
+        "id": "is-fighting-type",
+        "text": "Is it a Fighting type?",
+        "category": "type",
+        "targetAttribute": "fighting"
+    },
+    {
+        "id": "is-ice-type",
+        "text": "Is it an Ice type?",
+        "category": "type",
+        "targetAttribute": "ice"
+    },
+    {
+        "id": "is-dragon-type",
+        "text": "Is it a Dragon type?",
+        "category": "type",
+        "targetAttribute": "dragon"
+    },
+    {
+        "id": "is-ghost-type",
+        "text": "Is it a Ghost type?",
+        "category": "type",
+        "targetAttribute": "ghost"
+    },
+    {
+        "id": "is-blue",
+        "text": "Is it blue?",
+        "category": "color",
+        "targetAttribute": "blue"
+    },
+    {
+        "id": "is-green",
+        "text": "Is it green?",
+        "category": "color",
+        "targetAttribute": "green"
+    },
+    {
+        "id": "is-yellow",
+        "text": "Is it yellow?",
+        "category": "color",
+        "targetAttribute": "yellow"
+    },
+    {
+        "id": "is-red",
+        "text": "Is it red?",
+        "category": "color",
+        "targetAttribute": "red"
+    },
+    {
+        "id": "is-brown",
+        "text": "Is it brown?",
+        "category": "color",
+        "targetAttribute": "brown"
+    },
+    {
+        "id": "is-purple",
+        "text": "Is it purple?",
+        "category": "color",
+        "targetAttribute": "purple"
+    },
+    {
+        "id": "is-pink",
+        "text": "Is it pink?",
+        "category": "color",
+        "targetAttribute": "pink"
+    },
+    {
+        "id": "is-orange",
+        "text": "Is it orange?",
+        "category": "color",
+        "targetAttribute": "orange"
+    },
+    {
+        "id": "is-black",
+        "text": "Is its color black?",
+        "category": "color",
+        "targetAttribute": "black"
+    },
+    {
+        "id": "is-white",
+        "text": "Is it white?",
+        "category": "color",
+        "targetAttribute": "white"
+    },
+    {
+        "id": "is-gray",
+        "text": "Is it gray?",
+        "category": "color",
+        "targetAttribute": "gray"
+    },
+    {
+        "id": "has-evolved",
+        "text": "Is this Pokemon an evolved form?",
+        "category": "other",
+        "targetAttribute": "evolvesFrom"
+    },
+    {
+        "id": "can-evolve",
+        "text": "Can this Pokemon evolve to another?",
+        "category": "other",
+        "targetAttribute": "evolvesTo"
+    },
+    {
+        "id": "is-cute",
+        "text": "Is it cute?",
+        "category": "other",
+        "targetAttribute": "cute"
+    },
+    {
+        "id": "is-cool",
+        "text": "Is it cool?",
+        "category": "other",
+        "targetAttribute": "cool"
+    },
+    {
+        "id": "is-tough",
+        "text": "Is it tough-looking?",
+        "category": "other",
+        "targetAttribute": "tough"
+    },
+    {
+        "id": "is-popular",
+        "text": "Is it popular/well-known?",
+        "category": "other",
+        "targetAttribute": "popular"
+    },
+    {
+        "id": "looks-friendly",
+        "text": "Does it look friendly?",
+        "category": "other",
+        "targetAttribute": "friendly"
+    },
+    {
+        "id": "seems-serious",
+        "text": "Does it seem serious?",
+        "category": "other",
+        "targetAttribute": "serious"
+    },
+    {
+        "id": "seems-wise",
+        "text": "Does it seem wise?",
+        "category": "other",
+        "targetAttribute": "wise"
+    },
+    {
+        "id": "looks-aggressive",
+        "text": "Does it look aggressive?",
+        "category": "other",
+        "targetAttribute": "aggressive"
+    },
+    {
+        "id": "looks-playful",
+        "text": "Does it look playful?",
+        "category": "other",
+        "targetAttribute": "playful"
+    },
+    {
+        "id": "good-companion",
+        "text": "Would it be a good companion?",
+        "category": "other",
+        "targetAttribute": "companion"
+    },
+    {
+        "id": "photogenic",
+        "text": "Is it photogenic?",
+        "category": "other",
+        "targetAttribute": "photogenic"
+    },
+    {
+        "id": "looks-strong",
+        "text": "Does it look strong?",
+        "category": "other",
+        "targetAttribute": "strong"
+    },
+    {
+        "id": "looks-lazy",
+        "text": "Does it look lazy?",
+        "category": "other",
+        "targetAttribute": "lazy"
+    },
+    {
+        "id": "seems-clumsy",
+        "text": "Does it seem clumsy?",
+        "category": "other",
+        "targetAttribute": "clumsy"
+    },
+    {
+        "id": "would-hug",
+        "text": "Would you want to hug it?",
+        "category": "other",
+        "targetAttribute": "huggable"
+    },
+    {
+        "id": "would-be-nervous",
+        "text": "Would you be nervous around it?",
+        "category": "other",
+        "targetAttribute": "intimidating"
+    },
+    {
+        "id": "seems-mischievous",
+        "text": "Does it seem mischievous?",
+        "category": "other",
+        "targetAttribute": "mischievous"
+    },
+    {
+        "id": "stands-out",
+        "text": "Does it stand out in a crowd?",
+        "category": "other",
+        "targetAttribute": "standsOut"
+    }
+]
