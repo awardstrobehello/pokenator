@@ -12,7 +12,7 @@ backend /
 ————/ GameState.cs  — What's been asked, what's possible, user answers  
 ————/ LogicEngine.cs
   
-————/ Data /  — see sample .json documents
+————/ Data /  
 ———————/ pokemon.json  
 ———————/ questions.json  
 
@@ -23,6 +23,12 @@ frontend/
   
 data-extractor/  
 ——————/ extractor.cs                  
+
+## Running Locally
+1. Clone repo
+2. `cd backend`
+3. `dotnet restore` (first time only - downloads dependencies)
+4. `dotnet run`
 
 ## Development Plan
 - Initial local development

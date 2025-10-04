@@ -16,18 +16,17 @@ namespace PokenatorBackend
         {
             Console.WriteLine("!!!! POKENATOR LOGIC TEST !!!!\n");
 
+            bool debug = args.Contains("--debug");
+
+            if (debug) Console.WriteLine("debug mode activated: Showing confidence calculations\n");
             // RandomTest is a random pokemon and the akinator guesses random questions
-            if (args.Length == 0)
-            {
-                RealGame();
-            }
-            else
-            {
-                RandomTest();
-            }
+
+            if (debug || args.Length == 0) RealGame(debug);
+            else RandomTest();
+
         }
 
-        static void RealGame()
+        static void RealGame(bool debug = false)
         {
             Console.WriteLine("RealGame called");
             try
@@ -80,12 +79,18 @@ namespace PokenatorBackend
 
                     Console.WriteLine($"Response: {input}");
 
-                    var topCandidates = game.GetTopCandidates();
-                    Console.WriteLine("Top candidates:");
-                    foreach (var (pokemon, probability) in topCandidates)
+
+                    if (debug)
                     {
-                        Console.WriteLine($"  {pokemon.Name}: {probability:P1}");
+                        var topCandidates = game.GetTopCandidates();
+                        Console.WriteLine("Top candidates:");
+                        foreach (var (pokemon, probability) in topCandidates)
+                        {
+                            Console.WriteLine($"  {pokemon.Name}: {probability:P1}");
+                        }
+                        
                     }
+
 
                     var guess = game.ShouldMakeGuess();
                     if (guess != null)
@@ -99,7 +104,7 @@ namespace PokenatorBackend
                         }
                         else
                         {
-                            Console.WriteLine("Continuing...");
+                            Console.WriteLine("I see... I've written that down.");
                             game.RecordWrongGuess(guess);
                         }
                     }
