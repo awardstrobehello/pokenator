@@ -14,14 +14,13 @@ namespace PokenatorBackend
         private List<Pokemon> _remainingPokemon;
         private Dictionary<string, UserAnswer> _userAnswers;
         private HashSet<string> _askedQuestions;
-
         private GameState(List<Pokemon> pokemon, List<Question> questions)
         {
             _allPokemon = pokemon;
             _allQuestions = questions;
             _engine = new LogicEngine();
 
-            _remainingPokemon = new List<Pokemon>(pokemon); 
+            _remainingPokemon = new List<Pokemon>(pokemon);
             _userAnswers = new Dictionary<string, UserAnswer>();
             _askedQuestions = new HashSet<string>();
         }
@@ -86,7 +85,7 @@ namespace PokenatorBackend
                 Response = response
             };
         }
-        
+
         public void RecordWrongGuess(Pokemon pokemon)
         {
             _remainingPokemon.RemoveAll(p => p.Name == pokemon.Name);
@@ -109,5 +108,8 @@ namespace PokenatorBackend
         public List<Pokemon> AllPokemon => _allPokemon;
         public List<Question> AllQuestions => _allQuestions;
         public LogicEngine Engine => _engine;
+
+        private static Dictionary<Guid, GameState> _activeGames = new();
+
     }
 }

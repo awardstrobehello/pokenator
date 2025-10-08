@@ -44,10 +44,11 @@ namespace PokenatorBackend
                         break;
                     }
 
-                    Console.WriteLine($"\nRound {round}: {question.Text}");
-                    Console.WriteLine("1 Yes      2 Somewhat      3 NotReally      4 No      5 DontKnow");
-                    string input = Console.ReadLine()?.Trim().ToLower() ?? "";
 
+                    Console.WriteLine($"Round {round}: {question.Text}");
+                    Console.WriteLine("1 Yes      2 Somewhat      3 NotReally      4 No      5 DontKnow");
+
+                    string input = Console.ReadLine()?.Trim().ToLower() ?? "";
 
                     int validInput = -1;
                     while (validInput == -1) {
