@@ -79,8 +79,10 @@ Runs on http://localhost:5173/
 - Create test game in console to guess pokemon
 - ASP.NET Core implementation, game state management
 - React TypeScript frontend
-#### To-do
 - Deploy API, Frontend to Azure
-- Add sprites, images
+
+#### To-do (at some point)
+- Make the frontend overall nicer to look at (Add sprites, images...)
+- Refine the guessing algorithm
 - Implement self-learning from incorrect guesses
 - CosmosDB migration
