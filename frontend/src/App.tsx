@@ -22,10 +22,10 @@ function App() {
     if (gameStarted) return;
     setIsLoading(true);
     try {
-      const response = await fetch('http://localhost:5051/api/game', { method: 'POST' });
+      const response = await fetch('/api/game', { method: 'POST' });
       if (response.ok) {
         const data = await response.json();
-        console.log('Game started:', data.gameId);
+        // console.log('Game started:', data.gameId);
         setGameId(data.gameId);
         setGameStarted(true);
 
@@ -41,12 +41,12 @@ function App() {
   const getQuestion = async (id: string) => {
     setIsLoading(true);
     try {
-      const response = await fetch(`http://localhost:5051/api/game/${id}/question`);
+      const response = await fetch(`/api/game/${id}/question`);
       if (response.ok) {
         const data = await response.json();
 
-        console.log('Full API response:', data);
-        console.log('Question:', data.question);
+        // console.log('Full API response:', data);
+        // console.log('Question:', data.question);
         // console.log('Candidates array:', data.candidates);
         // console.log('First candidate:', data.candidates[0]);
         // console.log('First candidate keys:', Object.keys(data.candidates[0]));
@@ -73,15 +73,15 @@ function App() {
   const handleAnswer = async (response: UserResponse) => {
     if (!gameId || !currentQuestion) return;
 
-    console.log('Request body:', JSON.stringify({
-      questionId: currentQuestion.id,
-      response: response
-    }));
+    // console.log('Request body:', JSON.stringify({
+    //   questionId: currentQuestion.id,
+    //   response: response
+    // }));
 
 
     setIsLoading(true);
     try {
-      const res = await fetch(`http://localhost:5051/api/game/${gameId}/answer`, {
+      const res = await fetch(`/api/game/${gameId}/answer`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -95,7 +95,7 @@ function App() {
       });
       if (res.ok) {
         const data = await res.json();
-        console.log('Answer:', data);
+        // console.log('Answer:', data);
         setCandidates(data.candidates);
         setQuestionsAsked(data.questionsAsked || questionsAsked + 1);
 
@@ -208,7 +208,7 @@ function App() {
                 onClick={async () => {
                   setShowGuessModal(false);
 
-                  await fetch(`http://localhost:5051/api/game/${gameId}/wrong-guess`, {
+                  await fetch(`/api/game/${gameId}/wrong-guess`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ pokemonName: currentGuess })

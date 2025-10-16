@@ -4,15 +4,15 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddCors(options =>
-{
-    options.AddDefaultPolicy(policy =>
-    {
-        policy.WithOrigins("http://localhost:5173") 
-              .AllowAnyHeader()
-              .AllowAnyMethod();
-    });
-});
+// builder.Services.AddCors(options =>
+// {
+//     options.AddDefaultPolicy(policy =>
+//     {
+//         policy.WithOrigins("http://localhost:5173") 
+//               .AllowAnyHeader()
+//               .AllowAnyMethod();
+//     });
+// });
 
 var app = builder.Build();
 
@@ -22,10 +22,13 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseDefaultFiles();  
+app.UseStaticFiles();  
 
-app.UseCors();
+// app.UseCors();
 app.UseAuthorization();
-
 app.MapControllers();
+
+app.MapFallbackToFile("index.html");
 
 app.Run();
